@@ -1,24 +1,24 @@
-'use client'
+'use client';
 
-import type React from 'react'
-import Link from 'next/link'
-import { useState, useEffect } from 'react'
-import { useAuth } from '@/components/AuthProvider'
-import { useRouter } from 'next/navigation'
+import type React from 'react';
+import Link from 'next/link';
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/components/AuthProvider';
+import { useRouter } from 'next/navigation';
 
 // Firestore
-import { db } from '@/lib/firebase'
-import { doc, setDoc, deleteDoc, getDoc } from 'firebase/firestore'
+import { db } from '@/lib/firebase';
+import { doc, setDoc, deleteDoc, getDoc } from 'firebase/firestore';
 
 export type Product = {
-  id: string
-  name: string
-  price: number
-  imageUrl: string
-  description?: string
-}
+  id: string;
+  name: string;
+  price: number;
+  imageUrl: string;
+  description?: string;
+};
 
-type Props = Product
+type Props = Product;
 
 // 제목을 Firestore 문서 ID로 안전하게 변환하는 함수
 function makeSafeId(title: string) {
@@ -26,7 +26,7 @@ function makeSafeId(title: string) {
     .trim()
     .replace(/\s+/g, '-') // 공백 → -
     .replace(/[^a-zA-Z0-9가-힣-_]/g, '') // 특수문자 제거
-    .slice(0, 40) // 너무 길면 40자까지만
+    .slice(0, 40); // 너무 길면 40자까지만
 }
 
 const ProductCard: React.FC<Props> = ({
@@ -36,113 +36,157 @@ const ProductCard: React.FC<Props> = ({
   imageUrl,
   description,
 }) => {
-  const [liked, setLiked] = useState(false)
+  const [liked, setLiked] = useState(false);
 
-  const { user } = useAuth()
-  const router = useRouter()
+  const { user } = useAuth();
+  const router = useRouter();
 
-  const displayPrice = price > 0 ? `${price} ETH` : '가격 미정'
+  const displayPrice = price > 0 ? `${price} ETH` : '가격 미정';
 
   // 제목 기반 문서 ID
-  const docId = makeSafeId(name) || id
+  const docId = makeSafeId(name) || id;
 
-  // 찜 여부 불러오기 (TS 안전하게 수정됨)
+  // 찜 여부 불러오기
   useEffect(() => {
-    if (!user) return
+    if (!user) return;
 
-    const uid = user.uid // TS가 여기서부터는 절대 null 아님
+    const uid = user.uid;
 
     async function loadLiked() {
-      const ref = doc(db, `users/${uid}/likes/${docId}`)
-      const snap = await getDoc(ref)
-      if (snap.exists()) {
-        setLiked(true)
-      }
+      const ref = doc(db, `users/${uid}/likes/${docId}`);
+      const snap = await getDoc(ref);
+      if (snap.exists()) setLiked(true);
     }
 
-    loadLiked()
-  }, [user, docId])
+    loadLiked();
+  }, [user, docId]);
 
   // 찜 버튼 클릭
   const onToggleLike: React.MouseEventHandler<HTMLButtonElement> = async (
     e
   ) => {
-    e.preventDefault()
-    e.stopPropagation()
+    e.preventDefault();
+    e.stopPropagation();
 
     if (!user) {
-      router.push('/login')
-      return
+      router.push('/login');
+      return;
     }
 
-    const uid = user.uid // 다시 TS 안전하게 보장
+    const uid = user.uid;
+    const ref = doc(db, `users/${uid}/likes/${docId}`);
 
-    const ref = doc(db, `users/${uid}/likes/${docId}`)
-
-    // 이미 찜 → 삭제
     if (liked) {
-      await deleteDoc(ref)
-      setLiked(false)
-      return
+      await deleteDoc(ref);
+      setLiked(false);
+      return;
     }
 
-    // 찜 저장
     await setDoc(ref, {
       listingId: id,
       title: name,
       createdAt: new Date(),
-    })
+    });
 
-    setLiked(true)
-  }
+    setLiked(true);
+  };
 
   return (
     <Link
       href={`/listings/${id}`}
-      className="bg-white rounded-2xl border border-gray-300 shadow-sm overflow-hidden flex flex-col hover:shadow-md transition-shadow"
+      className={[
+        'group relative overflow-hidden rounded-2xl',
+        'border border-[var(--border)] bg-white shadow-sm',
+        'transition hover:shadow-[var(--shadow)]',
+      ].join(' ')}
     >
-      {/* 이미지 영역 */}
-      <div className="relative aspect-3/4 bg-gray-100 overflow-hidden">
-        {imageUrl ? (
-          <img
-            src={imageUrl}
-            alt={name}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
-            이미지 없음
-          </div>
-        )}
+      <div className="flex gap-4 p-4">
+        {/* 썸네일: 세로 포스터 느낌 제거 → 정사각/가로형 카드 */}
+        <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+          {imageUrl ? (
+            <img
+              src={imageUrl}
+              alt={name}
+              className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+            />
+          ) : (
+            <div className="h-full w-full grid place-items-center text-xs text-[var(--muted)]">
+              NO IMAGE
+            </div>
+          )}
 
-        {/* 찜 버튼 */}
-        <button
-          type="button"
-          onClick={onToggleLike}
-          className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/80 flex items-center justify-center text-xs shadow-sm"
-        >
-          <span className={liked ? 'text-pink-500' : 'text-gray-400'}>♥</span>
-        </button>
-      </div>
-
-      {/* 정보 영역 */}
-      <div className="flex-1 flex flex-col px-3 py-3">
-        <div className="text-sm font-semibold truncate">
-          {name || '제목 없음'}
+          {/* 찜 버튼 */}
+          <button
+            type="button"
+            onClick={onToggleLike}
+            className={[
+              'absolute right-2 top-2 h-8 w-8 rounded-xl',
+              'border border-[var(--border)] bg-white/90 backdrop-blur',
+              'grid place-items-center shadow-sm',
+              'transition hover:border-[var(--accent)]',
+            ].join(' ')}
+            aria-label={liked ? '찜 해제' : '찜하기'}
+            title={liked ? '찜 해제' : '찜하기'}
+          >
+            <span
+              className={[
+                'text-sm leading-none',
+                liked ? 'text-[var(--accent-strong)]' : 'text-gray-400',
+              ].join(' ')}
+            >
+              ♥
+            </span>
+          </button>
         </div>
 
-        {description && (
-          <div className="mt-1 text-xs text-gray-500 line-clamp-2">
-            {description}
-          </div>
-        )}
+        {/* 정보 영역 */}
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <div className="text-[15px] font-semibold text-gray-900 truncate">
+                {name || '제목 없음'}
+              </div>
 
-        <div className="mt-2 text-sm font-semibold text-violet-700">
-          {displayPrice}
+              {description ? (
+                <div className="mt-1 text-sm text-[var(--muted)] line-clamp-2">
+                  {description}
+                </div>
+              ) : (
+                <div className="mt-1 text-sm text-[var(--muted)]">
+                  설명 없음
+                </div>
+              )}
+            </div>
+
+            {/* 가격 배지: 회청 포인트는 ‘테두리/텍스트’로만 절제 */}
+            <div
+              className={[
+                'shrink-0 rounded-xl px-3 py-1.5',
+                'border border-[var(--border)] bg-[var(--surface)]',
+                'text-xs font-semibold',
+                price > 0
+                  ? 'text-[var(--accent-strong)]'
+                  : 'text-[var(--muted)]',
+              ].join(' ')}
+            >
+              {displayPrice}
+            </div>
+          </div>
+
+          {/* 하단 메타(전부 무채색) */}
+          <div className="mt-3 flex items-center gap-2 text-xs text-[var(--muted)]">
+            <span className="rounded-lg border border-[var(--border)] bg-white px-2 py-1">
+              Listing ID
+            </span>
+            <span className="truncate">{id}</span>
+          </div>
         </div>
       </div>
+
+      {/* Hover 라인: 은은한 포인트 */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[2px] bg-transparent transition group-hover:bg-[var(--accent)]/40" />
     </Link>
-  )
-}
+  );
+};
 
-export default ProductCard
+export default ProductCard;

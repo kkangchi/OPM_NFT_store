@@ -1,29 +1,27 @@
-'use client'
+'use client';
 
-import { useAuth } from '@/components/AuthProvider'
-import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useAuth } from '@/components/AuthProvider';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function LoginPage() {
-  const { user, loginWithGoogle, loginWithGitHub, loading } = useAuth()
-  const router = useRouter()
+  const { user, loginWithGoogle, loginWithGitHub, loading } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     if (!loading && user) {
-      router.replace('/')
+      router.replace('/');
     }
-  }, [user, loading, router])
+  }, [user, loading, router]);
 
   return (
     <div className="flex items-center justify-center min-h-[80vh]">
       <div className="w-full max-w-[420px] bg-white border border-gray-200 rounded-2xl shadow-sm p-8">
         {/* 로고 / 제목 */}
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-extrabold text-violet-700">
-            OPM 로그인
-          </h1>
+          <h1 className="text-2xl font-extrabold text-violet-700">로그인</h1>
           <p className="text-sm text-gray-500 mt-2">
-            계정으로 로그인하여 개인 스토어를 이용해보세요.
+            계정으로 로그인하여 이용해보세요.
           </p>
         </div>
 
@@ -59,5 +57,5 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }

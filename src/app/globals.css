@@ -1,32 +1,92 @@
 @import 'tailwindcss';
 
+/* 무채색/흑백 + 회청색(blue-gray) 포인트 테마 */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Base */
+  --bg: #ffffff;
+  --surface: #f8fafc; /* 아주 연한 회색 */
+  --text: #0f172a; /* slate-900 느낌 */
+  --muted: #475569; /* slate-600 */
+  --border: #e2e8f0; /* slate-200 */
+
+  /* Accent (회색빛 도는 파랑) */
+  --accent: #4f6d8a; /* blue-gray */
+  --accent-strong: #3a5874;
+
+  /* Effects */
+  --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+  --ring: 0 0 0 4px rgba(79, 109, 138, 0.18);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
+/* 다크 모드(선택): 시스템 설정 따라가되 과제 톤 유지 */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg: #0b1220; /* 네이비 톤의 다크 */
+    --surface: #101a2f; /* 카드 배경 */
+    --text: #e5e7eb; /* 밝은 회색 */
+    --muted: #9ca3af;
+    --border: rgba(226, 232, 240, 0.18);
+
+    --accent: #6b8aa6;
+    --accent-strong: #7aa0c3;
+
+    --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    --ring: 0 0 0 4px rgba(107, 138, 166, 0.22);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
-
+/* 전역 기본 */
 html,
 body {
-  background-color: #f4f2ff !important;
-  color: #1a1a1a;
+  background: var(--bg);
+  color: var(--text);
+}
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+}
+
+/* 선택/포커스/링크: 포인트 컬러 반영 */
+::selection {
+  background: rgba(79, 109, 138, 0.22);
+}
+
+a {
+  color: var(--accent-strong);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+  border-radius: 10px;
+}
+
+/* 스크롤바(크롬 계열): 과제 톤에 맞게 절제 */
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: rgba(71, 85, 105, 0.25);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
 }
